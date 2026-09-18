@@ -251,14 +251,16 @@ function App() {
       img.src = URL.createObjectURL(file)
     })
 
-    const PAD = 24
-    const MAIN_W = 640
-    const MAIN_H = 360
-    const THUMB_SIZE = 72
+    const PAD = 30
+    const SHOT_NUM_W = 80
+    const MAIN_H = 270
+    const MAIN_W = MAIN_H * (16 / 9)
+    const THUMB_W = 90
+    const THUMB_H = 50
     const THUMB_GAP = 6
-    const SHOT_NUM_W = 100
-    const ROW_H = MAIN_H + THUMB_SIZE + 44
-    const CANVAS_W = PAD + SHOT_NUM_W + MAIN_W + PAD
+    const SIDE_W = THUMB_W + PAD
+    const ROW_H = MAIN_H + 36
+    const CANVAS_W = PAD + SHOT_NUM_W + MAIN_W + SIDE_W + PAD
     const HEADER_H = 70
 
     const canvasH = HEADER_H + panels.length * ROW_H + PAD
@@ -291,10 +293,10 @@ function App() {
       ctx.fillStyle = '#e0e0e0'
       ctx.font = 'bold 40px sans-serif'
       ctx.textAlign = 'center'
-      ctx.fillText(String(shotNum), PAD + SHOT_NUM_W / 2, baseY + 50)
-      ctx.font = '11px sans-serif'
+      ctx.fillText(String(shotNum), PAD + SHOT_NUM_W / 2, baseY + MAIN_H / 2 + 14)
+      ctx.font = '10px sans-serif'
       ctx.fillStyle = '#6a6a8a'
-      ctx.fillText('SHOT NAME', PAD + SHOT_NUM_W / 2, baseY + 70)
+      ctx.fillText('SHOT NAME', PAD + SHOT_NUM_W / 2, baseY + MAIN_H / 2 + 32)
       ctx.textAlign = 'left'
 
       const imgX = PAD + SHOT_NUM_W
@@ -323,12 +325,12 @@ function App() {
       }
 
       const extras = p.extraImages || []
-      const thumbY = imgY + MAIN_H + 8
-      for (let t = 0; t < extras.length; t++) {
-        const tx = imgX + t * (THUMB_SIZE + THUMB_GAP)
+      const thumbX = imgX + MAIN_W + 10
+      for (let t = 0; t < extras.length && t < 4; t++) {
+        const ty = imgY + t * (THUMB_H + THUMB_GAP)
         ctx.fillStyle = '#0f0f23'
         ctx.beginPath()
-        ctx.roundRect(tx, thumbY, THUMB_SIZE, THUMB_SIZE, 4)
+        ctx.roundRect(thumbX, ty, THUMB_W, THUMB_H, 4)
         ctx.fill()
         ctx.strokeStyle = '#2a2a4a'
         ctx.lineWidth = 1
@@ -336,18 +338,18 @@ function App() {
 
         const tImg = await loadImage(extras[t].file)
         if (tImg) {
-          const tScale = Math.min(THUMB_SIZE / tImg.naturalWidth, THUMB_SIZE / tImg.naturalHeight)
+          const tScale = Math.min(THUMB_W / tImg.naturalWidth, THUMB_H / tImg.naturalHeight)
           const tDrawW = tImg.naturalWidth * tScale
           const tDrawH = tImg.naturalHeight * tScale
-          ctx.drawImage(tImg, tx + (THUMB_SIZE - tDrawW) / 2, thumbY + (THUMB_SIZE - tDrawH) / 2, tDrawW, tDrawH)
+          ctx.drawImage(tImg, thumbX + (THUMB_W - tDrawW) / 2, ty + (THUMB_H - tDrawH) / 2, tDrawW, tDrawH)
         }
       }
 
       const totalImgs = (p.imageFile ? 1 : 0) + extras.length
       if (totalImgs > 0) {
         ctx.fillStyle = '#4a4a6a'
-        ctx.font = '11px sans-serif'
-        ctx.fillText(`+ ${totalImgs} image${totalImgs > 1 ? 's' : ''}`, imgX, thumbY + THUMB_SIZE + 16)
+        ctx.font = '10px sans-serif'
+        ctx.fillText(`+ ${totalImgs} image${totalImgs > 1 ? 's' : ''}`, imgX, baseY + MAIN_H + 16)
       }
     }
 
