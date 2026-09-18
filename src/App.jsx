@@ -10,6 +10,7 @@ function createPanel(id) {
     imageUrl: '',
     imageFile: null,
     imageName: '',
+    extraImages: [],
     time: '',
     duration: '',
     camera: '',
@@ -191,6 +192,18 @@ Video model: ${videoModel}
           reader.readAsDataURL(p.imageFile)
         })
       }
+      const additionalImages = []
+      for (const img of (p.extraImages || [])) {
+        if (img.file) {
+          const data = await new Promise(resolve => {
+            const reader = new FileReader()
+            reader.onloadend = () => resolve({ data: reader.result, name: img.name })
+            reader.onerror = () => resolve(null)
+            reader.readAsDataURL(img.file)
+          })
+          if (data) additionalImages.push(data)
+        }
+      }
       panelData.push({
         shot: p.id,
         shotName: p.shotName,
@@ -204,6 +217,7 @@ Video model: ${videoModel}
         sound: p.sound,
         aiResult: p.aiResult || '',
         mainImage,
+        additionalImages,
       })
     }
 
