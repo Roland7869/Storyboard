@@ -252,12 +252,12 @@ function App() {
     })
 
     const PAD = 24
-    const MAIN_W = 520
-    const MAIN_H = 292
-    const THUMB_SIZE = 64
+    const MAIN_W = 640
+    const MAIN_H = 360
+    const THUMB_SIZE = 72
     const THUMB_GAP = 6
-    const SHOT_NUM_W = 90
-    const ROW_H = MAIN_H + THUMB_SIZE + 40
+    const SHOT_NUM_W = 100
+    const ROW_H = MAIN_H + THUMB_SIZE + 44
     const CANVAS_W = PAD + SHOT_NUM_W + MAIN_W + PAD
     const HEADER_H = 70
 
