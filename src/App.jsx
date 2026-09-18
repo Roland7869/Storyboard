@@ -251,66 +251,64 @@ function App() {
       img.src = URL.createObjectURL(file)
     })
 
-    const CANVAS_W = 1200
-    const CANVAS_H = 1600
-    const PAD = 40
-    const CONTENT_W = CANVAS_W - PAD * 2
-    const HEADER_H = 80
-    const SHOT_NUM_W = 60
-    const THUMB_COL_W = 130
-    const MAIN_W = CONTENT_W - SHOT_NUM_W - THUMB_COL_W - 20
+    const W = 1920
+    const H = 1080
+    const PAD = 50
+    const SHOT_NUM_W = 80
+    const THUMB_COL_W = 160
+    const MAIN_W = W - PAD * 2 - SHOT_NUM_W - THUMB_COL_W - 20
     const MAIN_H = Math.round(MAIN_W * 9 / 16)
-    const THUMB_W = 110
-    const THUMB_H = 62
-    const THUMB_GAP = 6
-    const ROW_H = MAIN_H + 50
-
-    const canvas = document.createElement('canvas')
-    canvas.width = CANVAS_W
-    canvas.height = CANVAS_H
-    const ctx = canvas.getContext('2d')
-    ctx.fillStyle = '#1a1a2e'
-    ctx.fillRect(0, 0, CANVAS_W, CANVAS_H)
-
-    ctx.fillStyle = '#e0e0e0'
-    ctx.font = 'bold 28px sans-serif'
-    ctx.fillText(title, PAD, 44)
-    if (chapter) {
-      ctx.font = '14px sans-serif'
-      ctx.fillStyle = '#6a6a8a'
-      ctx.fillText(chapter, PAD, 66)
-    }
-    ctx.fillStyle = '#7c83ff'
-    ctx.font = '13px sans-serif'
-    ctx.textAlign = 'right'
-    ctx.fillText(`Model: ${videoModel}  |  ${panels.length} shots`, CANVAS_W - PAD, 44)
-    ctx.textAlign = 'left'
-
-    ctx.strokeStyle = '#2a2a4a'
-    ctx.lineWidth = 1
-    ctx.beginPath()
-    ctx.moveTo(PAD, HEADER_H)
-    ctx.lineTo(CANVAS_W - PAD, HEADER_H)
-    ctx.stroke()
+    const THUMB_W = 140
+    const THUMB_H = 78
+    const THUMB_GAP = 8
 
     for (let i = 0; i < panels.length; i++) {
       const p = panels[i]
       const shotNum = i + 1
-      const baseY = HEADER_H + 20 + i * ROW_H
+
+      const canvas = document.createElement('canvas')
+      canvas.width = W
+      canvas.height = H
+      const ctx = canvas.getContext('2d')
+      ctx.fillStyle = '#1a1a2e'
+      ctx.fillRect(0, 0, W, H)
+
+      ctx.fillStyle = '#e0e0e0'
+      ctx.font = 'bold 22px sans-serif'
+      ctx.fillText(title, PAD, 40)
+      if (chapter) {
+        ctx.font = '13px sans-serif'
+        ctx.fillStyle = '#6a6a8a'
+        ctx.fillText(chapter, PAD, 60)
+      }
+      ctx.fillStyle = '#7c83ff'
+      ctx.font = '12px sans-serif'
+      ctx.textAlign = 'right'
+      ctx.fillText(`Model: ${videoModel}  |  Shot ${shotNum} of ${panels.length}`, W - PAD, 40)
+      ctx.textAlign = 'left'
+
+      ctx.strokeStyle = '#2a2a4a'
+      ctx.lineWidth = 1
+      ctx.beginPath()
+      ctx.moveTo(PAD, 72)
+      ctx.lineTo(W - PAD, 72)
+      ctx.stroke()
+
+      const baseY = 90
 
       ctx.fillStyle = '#7c83ff'
-      ctx.font = 'bold 36px sans-serif'
-      ctx.fillText(String(shotNum), PAD + 10, baseY + MAIN_H / 2 + 8)
-      ctx.font = '9px sans-serif'
+      ctx.font = 'bold 48px sans-serif'
+      ctx.fillText(String(shotNum), PAD + 10, baseY + MAIN_H / 2 + 16)
+      ctx.font = '10px sans-serif'
       ctx.fillStyle = '#6a6a8a'
-      ctx.fillText('SHOT NAME', PAD + 10, baseY + MAIN_H / 2 + 24)
+      ctx.fillText('SHOT NAME', PAD + 10, baseY + MAIN_H / 2 + 34)
 
       const imgX = PAD + SHOT_NUM_W
       const imgY = baseY
 
       ctx.fillStyle = '#0f0f23'
       ctx.beginPath()
-      ctx.roundRect(imgX, imgY, MAIN_W, MAIN_H, 6)
+      ctx.roundRect(imgX, imgY, MAIN_W, MAIN_H, 8)
       ctx.fill()
       ctx.strokeStyle = '#2a2a4a'
       ctx.lineWidth = 1
@@ -326,13 +324,13 @@ function App() {
         }
       } else {
         ctx.fillStyle = '#4a4a6a'
-        ctx.font = '12px sans-serif'
-        ctx.fillText(`Shot ${shotNum} — no image`, imgX + 16, imgY + MAIN_H / 2 + 4)
+        ctx.font = '14px sans-serif'
+        ctx.fillText(`Shot ${shotNum} — no image`, imgX + 20, imgY + MAIN_H / 2 + 5)
       }
 
       const extras = p.extraImages || []
-      const thumbX = imgX + MAIN_W + 12
-      for (let t = 0; t < extras.length && t < 4; t++) {
+      const thumbX = imgX + MAIN_W + 16
+      for (let t = 0; t < extras.length && t < 5; t++) {
         const ty = imgY + t * (THUMB_H + THUMB_GAP)
         ctx.fillStyle = '#0f0f23'
         ctx.beginPath()
@@ -354,14 +352,18 @@ function App() {
       const totalImgs = (p.imageFile ? 1 : 0) + extras.length
       if (totalImgs > 0) {
         ctx.fillStyle = '#4a4a6a'
-        ctx.font = '10px sans-serif'
-        ctx.fillText(`+ ${totalImgs} image${totalImgs > 1 ? 's' : ''}`, imgX, baseY + MAIN_H + 16)
+        ctx.font = '11px sans-serif'
+        ctx.fillText(`+ ${totalImgs} image${totalImgs > 1 ? 's' : ''}`, imgX, baseY + MAIN_H + 20)
       }
-    }
 
-    canvas.toBlob((blob) => {
-      if (blob) downloadBlob(blob, `${safeName}_shots.png`)
-    }, 'image/png')
+      await new Promise((resolve) => {
+        canvas.toBlob((blob) => {
+          if (blob) downloadBlob(blob, `${safeName}_Shot${shotNum}.png`)
+          resolve()
+        }, 'image/png')
+      })
+      await new Promise(r => setTimeout(r, 300))
+    }
 
     const lines = []
     lines.push(`Storyboard: ${title}`)
