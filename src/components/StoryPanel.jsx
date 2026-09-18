@@ -382,16 +382,6 @@ export default function StoryPanel({ panel, onUpdate, panelNumber }) {
           maxLength={500}
         />
       </td>
-      <td className="sb-transition">
-        <input
-          type="text"
-          value={panel.transition || ''}
-          onChange={(e) => handleField('transition', e.target.value)}
-          placeholder="DISSOLVE"
-          className="cell-input"
-          maxLength={50}
-        />
-      </td>
       <td className="sb-sound">
         <input
           type="text"

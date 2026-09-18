@@ -144,7 +144,7 @@ body {
 .th-image { width: 180px; }
 .th-time { width: 100px; }
 .th-camera, .th-movement, .th-lighting, .th-action { width: 140px; }
-.th-transition, .th-sound { width: 110px; }
+.th-sound { width: 110px; }
 
 /* Run bar */
 .run-bar {

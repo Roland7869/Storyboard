@@ -17,7 +17,6 @@ function createPanel(id) {
     movement: '',
     lighting: '',
     action: '',
-    transition: '',
     sound: '',
   }
 }
@@ -27,7 +26,6 @@ const INITIAL_PANELS = Array.from({ length: 6 }, (_, i) => createPanel(i + 1))
 const VIDEO_MODELS = ['Kling', 'Veo', 'Seedance', 'Minimax', 'Sora 2', 'LTX']
 
 const MAX_IMPORT_SIZE = 100 * 1024
-const MAX_EXPORT_SIZE = 50 * 1024 * 1024
 
 const COLOR_SCHEMES = {
   midnight: { bg: '#0d0d1a', headerBg: '#111127', panelBg: '#1a1a2e', borderColor: '#1a1a3a', borderHover: '#4a4a7a', text: '#e0e0e0', textDim: '#6a6a8a', accent: '#7c83ff' },
@@ -121,11 +119,16 @@ function App() {
     const parts = []
     if (p.shotName) parts.push(`Shot: ${p.shotName}`)
     if (p.time) parts.push(`Time: ${p.time}${p.duration ? ' (' + p.duration + ')' : ''}`)
-    if (p.camera) parts.push(`Camera: ${p.camera}`)
+    if (p.cameraHeight) parts.push(`Camera Height: ${p.cameraHeight}`)
+    if (p.cameraFraming) parts.push(`Framing: ${p.cameraFraming}`)
+    if (p.cameraAngle) parts.push(`Angle: ${p.cameraAngle}`)
+    if (p.cameraPosition) parts.push(`Position: ${p.cameraPosition}`)
+    if (p.cameraLens) parts.push(`Lens: ${p.cameraLens}`)
+    if (p.camera3D) parts.push(`3D Space: ${p.camera3D}`)
+    if (p.resolution) parts.push(`Resolution: ${p.resolution}`)
     if (p.movement) parts.push(`Movement: ${p.movement}`)
     if (p.lighting) parts.push(`Lighting: ${p.lighting}`)
     if (p.action) parts.push(`Action: ${p.action}`)
-    if (p.transition) parts.push(`Transition: ${p.transition}`)
     if (p.sound) parts.push(`Sound: ${p.sound}`)
     return parts.length > 0 ? parts.join('\n') : 'No description provided'
   }
@@ -205,57 +208,82 @@ Video model: ${videoModel}
   }
 
   const exportStoryboard = async () => {
-    const panelData = []
-    for (const p of panels) {
-      let mainImage = null
-      if (p.imageFile) {
-        mainImage = await new Promise(resolve => {
-          const reader = new FileReader()
-          reader.onloadend = () => resolve({ data: reader.result, name: p.imageName })
-          reader.onerror = () => resolve(null)
-          reader.readAsDataURL(p.imageFile)
-        })
-      }
-      const additionalImages = []
-      for (const img of (p.extraImages || [])) {
-        if (img.file) {
-          const data = await new Promise(resolve => {
-            const reader = new FileReader()
-            reader.onloadend = () => resolve({ data: reader.result, name: img.name })
-            reader.onerror = () => resolve(null)
-            reader.readAsDataURL(img.file)
-          })
-          if (data) additionalImages.push(data)
-        }
-      }
-      panelData.push({
-        shot: p.id,
-        shotName: p.shotName,
-        time: p.time,
-        duration: p.duration,
-        camera: p.camera,
-        movement: p.movement,
-        lighting: p.lighting,
-        action: p.action,
-        transition: p.transition,
-        sound: p.sound,
-        aiResult: p.aiResult || '',
-        mainImage,
-        additionalImages,
-      })
+    const safeName = sanitizeFilename(title) + (chapter ? '_' + sanitizeFilename(chapter) : '')
+
+    const downloadBlob = (blob, filename) => {
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = filename
+      a.click()
+      URL.revokeObjectURL(url)
     }
 
-    const data = { title, chapter, videoModel, prompt: settings.promptContent || '', panels: panelData }
-    const json = JSON.stringify(data, null, 2)
-    if (json.length > MAX_EXPORT_SIZE) { alert(`Export too large (${Math.round(json.length / 1024 / 1024)}MB)`); return }
+    const convertToPng = (file) => new Promise((resolve) => {
+      if (file.type === 'image/png') { resolve(file); return }
+      const img = new Image()
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        canvas.width = img.naturalWidth
+        canvas.height = img.naturalHeight
+        const ctx = canvas.getContext('2d')
+        ctx.drawImage(img, 0, 0)
+        canvas.toBlob((blob) => resolve(blob), 'image/png')
+      }
+      img.onerror = () => resolve(file)
+      img.src = URL.createObjectURL(file)
+    })
 
-    const blob = new Blob([json], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${sanitizeFilename(title)}${chapter ? '_' + sanitizeFilename(chapter) : ''}.json`
-    a.click()
-    URL.revokeObjectURL(url)
+    let exportedCount = 0
+
+    for (let i = 0; i < panels.length; i++) {
+      const p = panels[i]
+      const shotNum = i + 1
+
+      if (p.imageFile) {
+        const pngBlob = await convertToPng(p.imageFile)
+        downloadBlob(pngBlob, `${safeName}_Shot${shotNum}.png`)
+        exportedCount++
+        await new Promise(r => setTimeout(r, 200))
+      }
+    }
+
+    const lines = []
+    lines.push(`Storyboard: ${title}`)
+    if (chapter) lines.push(`Chapter: ${chapter}`)
+    lines.push(`Video Model: ${videoModel}`)
+    lines.push(`Total Shots: ${panels.length}`)
+    lines.push('')
+
+    for (let i = 0; i < panels.length; i++) {
+      const p = panels[i]
+      const shotNum = i + 1
+      lines.push(`═══════════════════════════════════════`)
+      lines.push(`SHOT ${shotNum}${p.shotName ? ' — ' + p.shotName : ''}`)
+      lines.push(`═══════════════════════════════════════`)
+      if (p.time) lines.push(`Time: ${p.time}${p.duration ? ' (' + p.duration + ')' : ''}`)
+      if (p.cameraHeight) lines.push(`Camera Height: ${p.cameraHeight}`)
+      if (p.cameraFraming) lines.push(`Framing: ${p.cameraFraming}`)
+      if (p.cameraAngle) lines.push(`Angle: ${p.cameraAngle}`)
+      if (p.cameraPosition) lines.push(`Position: ${p.cameraPosition}`)
+      if (p.cameraLens) lines.push(`Lens: ${p.cameraLens}`)
+      if (p.camera3D) lines.push(`3D Space: ${p.camera3D}`)
+      if (p.resolution) lines.push(`Resolution: ${p.resolution}`)
+      if (p.movement) lines.push(`Movement: ${p.movement}`)
+      if (p.lighting) lines.push(`Lighting: ${p.lighting}`)
+      if (p.action) lines.push(`Action: ${p.action}`)
+      if (p.sound) lines.push(`Sound: ${p.sound}`)
+      if (p.aiResult) lines.push(`\nAI Prompt:\n${p.aiResult}`)
+      lines.push('')
+    }
+
+    const txtContent = lines.join('\n')
+    const txtBlob = new Blob([txtContent], { type: 'text/plain' })
+    downloadBlob(txtBlob, `${safeName}_prompts.txt`)
+
+    if (exportedCount === 0 && panels.every(p => !p.aiResult && !p.action)) {
+      alert('Nothing to export — add images or run AI first')
+    }
   }
 
   return (
@@ -289,9 +317,9 @@ Video model: ${videoModel}
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Import
           </button>
-          <button className="action-btn" onClick={exportStoryboard} title="Export JSON">
+          <button className="action-btn" onClick={exportStoryboard} title="Export PNG images + TXT prompts">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            Export
+            Export PNG + TXT
           </button>
         </div>
       </header>
@@ -309,7 +337,6 @@ Video model: ${videoModel}
                   <th className="th-movement">MOVEMENT</th>
                   <th className="th-lighting">LIGHTING</th>
                   <th className="th-action">ACTION</th>
-                  <th className="th-transition">TRANSITION</th>
                   <th className="th-sound">SOUND CUE</th>
                 </tr>
               </thead>
