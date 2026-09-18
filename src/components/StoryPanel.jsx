@@ -54,6 +54,32 @@ const MOVEMENT_OPTIONS = [
   { label: 'Pass-through objects', value: 'Pass-through objects', desc: 'pass-through movement. Movement: move forward toward a visible object, surface or barrier and continue into the space beyond. Speed: smooth centered glide. Framing: keep the opening or surface centered as the transition point. End: arrive inside the revealed space beyond.' },
 ]
 
+const LIGHTING_OPTIONS = [
+  { label: '— Select lighting —', value: '' },
+  { label: 'Softbox lighting', value: 'Softbox lighting', desc: 'large softbox key light at 45 degrees, soft wrap, subtle fill, clean shadow edges. Soft, flattering light with gentle shadows. Clean, modern studio vibe.' },
+  { label: 'Soft diffused studio', value: 'Soft diffused studio', desc: 'soft diffused studio lighting, even exposure, gentle highlights, minimal harsh shadows. Even, flattering studio light.' },
+  { label: 'Softbox with reflector', value: 'Softbox with reflector', desc: 'softbox key light camera-left, reflector fill camera-right, natural skin tones. Clean, professional portrait light.' },
+  { label: 'Rim light', value: 'Rim light', desc: 'rim light from behind, clean edge highlight around hair and shoulders, controlled spill. Strong subject separation from background. Premium, cinematic polish.' },
+  { label: 'Rim light + low key', value: 'Rim light + low key', desc: 'low key setup with strong rim light behind subject, clean edge highlights, minimal spill. Dramatic dark-background separation.' },
+  { label: 'Key + strong rim', value: 'Key + strong rim', desc: 'key light soft, plus strong rim light behind subject, high contrast separation. Flattering face light with bold edge definition.' },
+  { label: 'Rembrandt lighting', value: 'Rembrandt lighting', desc: 'Rembrandt lighting, single key light high and to the side, dramatic contrast, triangle cheek highlight. Classic dramatic portrait lighting. One side brighter, the other in shadow with a small triangle of light on the shadow cheek.' },
+  { label: 'Chiaroscuro portrait', value: 'Chiaroscuro portrait', desc: 'chiaroscuro portrait lighting, deep shadows, soft falloff, warm highlights. Classic art-inspired dramatic contrast.' },
+  { label: 'Single key 45 degrees', value: 'Single key 45 degrees', desc: 'one key light at 45 degrees and slightly above, controlled fill, moody contrast. Simple, dramatic single-source setup.' },
+  { label: 'Neon lighting', value: 'Neon lighting', desc: 'neon signs casting colored light, magenta and cyan mix, reflective highlights, soft bloom. Colored light sources with glow and reflections. Cyberpunk, nightlife, street portrait energy.' },
+  { label: 'Urban neon glow', value: 'Urban neon glow', desc: 'urban neon glow, colored rim light, wet street reflections, cinematic night lighting. Night street scene with vibrant color.' },
+  { label: 'Neon tube lighting', value: 'Neon tube lighting', desc: 'neon tube lighting, vibrant color contrast, controlled highlights, realistic skin tones. Vivid colored light with natural skin.' },
+  { label: 'Natural window light', value: 'Natural window light', desc: 'one large north-facing window camera-left, broad diffused daylight, soft shadow transition, low neutral room fill, natural catchlights, realistic highlight rolloff, no studio flash. Best for candid portraits, food, interiors, lifestyle.' },
+  { label: 'High-key studio', value: 'High-key studio', desc: 'high-key white studio, large frontal soft key, balanced fill from both sides, evenly lit background one stop brighter than the subject, restrained shadow depth, clean whites without clipped highlights. Best for ecommerce, beauty, wellness, bright editorial.' },
+  { label: 'Low-key dramatic', value: 'Low-key dramatic', desc: 'low-key setup with one narrow soft key high camera-right, deep but detailed shadows, minimal fill, subtle edge separation, dark background, controlled specular highlights, no crushed detail. Best for cinematic portraits, premium products, album art, suspense.' },
+  { label: 'Split lighting', value: 'Split lighting', desc: 'split lighting with one vertical soft key exactly 90 degrees camera-left, one half of the face illuminated and the other half in controlled shadow, low fill, sharp eye detail, neutral background, no second key light. Best for bold character portraits, musicians, athletes.' },
+  { label: 'Golden-hour backlight', value: 'Golden-hour backlight', desc: 'low golden-hour sun behind the subject camera-right, warm hair and shoulder backlight, soft sky fill on the face, long coherent shadows, restrained lens flare, natural skin tone, visible detail in highlights. Best for outdoor portraits, travel, couples, fashion.' },
+  { label: 'Product lighting', value: 'Product lighting', desc: 'broad strip softbox upper-left defining the product edge, white-card fill camera-right, soft overhead gradient, clean contact shadow, reflections that follow the material, accurate label color, no blown highlights, no floating product. Best for packaging, cosmetics, bottles, electronics.' },
+  { label: 'Flat fix: add contrast', value: 'Flat fix: add contrast', desc: 'increase contrast, deeper shadows, reduce fill, add subtle rim light separation. Use when the image looks flat.' },
+  { label: 'Harsh fix: add diffusion', value: 'Harsh fix: add diffusion', desc: 'soft diffused lighting, gentle falloff, soft wrap, no harsh shadows. Use when the image looks too harsh.' },
+  { label: 'Muddy fix: clean highlights', value: 'Muddy fix: clean highlights', desc: 'clean highlights, deeper blacks, crisp separation, minimal haze, natural contrast. Use when the image looks muddy or gray.' },
+  { label: 'Random direction fix', value: 'Random direction fix', desc: 'single key light from camera-left at 45 degrees, minimal fill, consistent shadow direction. Use when light direction feels random.' },
+]
+
 function validateFile(file) {
   if (!ALLOWED_TYPES.includes(file.type)) return 'Invalid type'
   if (file.size > MAX_IMAGE_SIZE) return 'Max 5MB'
@@ -163,6 +189,13 @@ export default function StoryPanel({ panel, onUpdate, panelNumber }) {
     handleField('movementDesc', opt?.desc || '')
   }
 
+  const handleLightingChange = (e) => {
+    const val = e.target.value
+    const opt = LIGHTING_OPTIONS.find(o => o.value === val)
+    handleField('lighting', val)
+    handleField('lightingDesc', opt?.desc || '')
+  }
+
   const totalImages = (imageUrl ? 1 : 0) + extraImages.length
 
   return (
@@ -257,14 +290,18 @@ export default function StoryPanel({ panel, onUpdate, panelNumber }) {
         )}
       </td>
       <td className="sb-lighting">
-        <textarea
+        <select
+          className="movement-select"
           value={panel.lighting || ''}
-          onChange={(e) => handleField('lighting', e.target.value)}
-          placeholder="GOLDEN HOUR&#10;Natural warm light"
-          className="cell-textarea"
-          rows={3}
-          maxLength={300}
-        />
+          onChange={handleLightingChange}
+        >
+          {LIGHTING_OPTIONS.map(opt => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
+        </select>
+        {panel.lightingDesc && (
+          <div className="movement-desc">{panel.lightingDesc}</div>
+        )}
       </td>
       <td className="sb-action">
         <textarea
