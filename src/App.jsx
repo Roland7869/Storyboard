@@ -194,9 +194,17 @@ function App() {
     }
   }
 
+  const panelHasData = (p) => {
+    return !!(p.shotName || p.action || p.cameraHeight || p.cameraFraming || p.movement || p.lighting || p.sound || p.imageFile)
+  }
+
   const runAIOnAllPanels = async () => {
     setIsRunning(true)
     for (let i = 0; i < panels.length; i++) {
+      if (!panelHasData(panels[i])) {
+        setPanels(prev => prev.map((p, idx) => idx === i ? { ...p, aiResult: '' } : p))
+        continue
+      }
       setRunningPanel(i + 1)
       const result = await runAIOnPanel(i)
       setPanels(prev => prev.map((p, idx) => idx === i ? { ...p, aiResult: result } : p))
@@ -243,102 +251,103 @@ function App() {
       img.src = URL.createObjectURL(file)
     })
 
-    const THUMB_W = 320
-    const THUMB_H = 180
     const PAD = 24
-    const HEADER_H = 60
-    const ROW_H = THUMB_H + PAD * 2 + 30
-    const COLS = 4
+    const MAIN_W = 520
+    const MAIN_H = 292
+    const THUMB_SIZE = 64
+    const THUMB_GAP = 6
+    const SHOT_NUM_W = 90
+    const ROW_H = MAIN_H + THUMB_SIZE + 40
+    const CANVAS_W = PAD + SHOT_NUM_W + MAIN_W + PAD
+    const HEADER_H = 70
 
-    const totalImages = panels.reduce((sum, p) => {
-      const main = p.imageFile ? 1 : 0
-      return sum + main + (p.extraImages?.length || 0)
-    }, 0)
-
-    const rows = Math.ceil(totalImages / COLS) || 1
-    const canvasW = PAD + COLS * (THUMB_W + PAD)
-    const canvasH = HEADER_H + PAD + rows * ROW_H + PAD
-
+    const canvasH = HEADER_H + panels.length * ROW_H + PAD
     const canvas = document.createElement('canvas')
-    canvas.width = canvasW
+    canvas.width = CANVAS_W
     canvas.height = canvasH
     const ctx = canvas.getContext('2d')
     ctx.fillStyle = '#1a1a2e'
-    ctx.fillRect(0, 0, canvasW, canvasH)
+    ctx.fillRect(0, 0, CANVAS_W, canvasH)
 
     ctx.fillStyle = '#e0e0e0'
-    ctx.font = 'bold 22px sans-serif'
-    ctx.fillText(title, PAD, 36)
+    ctx.font = 'bold 24px sans-serif'
+    ctx.fillText(title, PAD, 38)
     if (chapter) {
       ctx.font = '14px sans-serif'
       ctx.fillStyle = '#6a6a8a'
-      ctx.fillText(chapter, PAD, 54)
+      ctx.fillText(chapter, PAD, 58)
     }
     ctx.fillStyle = '#7c83ff'
     ctx.font = '12px sans-serif'
-    ctx.fillText(`Model: ${videoModel}  |  ${panels.length} shots  |  ${totalImages} images`, canvasW - 400, 36)
+    ctx.textAlign = 'right'
+    ctx.fillText(`Model: ${videoModel}  |  ${panels.length} shots`, CANVAS_W - PAD, 30)
+    ctx.textAlign = 'left'
 
-    let imgIndex = 0
     for (let i = 0; i < panels.length; i++) {
       const p = panels[i]
       const shotNum = i + 1
-      const allImages = []
-      if (p.imageFile) allImages.push({ file: p.imageFile, label: 'Main' })
-      for (const ex of (p.extraImages || [])) allImages.push({ file: ex.file, label: ex.name })
+      const baseY = HEADER_H + i * ROW_H
 
-      for (const entry of allImages) {
-        const col = imgIndex % COLS
-        const row = Math.floor(imgIndex / COLS)
-        const x = PAD + col * (THUMB_W + PAD)
-        const y = HEADER_H + PAD + row * ROW_H
+      ctx.fillStyle = '#e0e0e0'
+      ctx.font = 'bold 40px sans-serif'
+      ctx.textAlign = 'center'
+      ctx.fillText(String(shotNum), PAD + SHOT_NUM_W / 2, baseY + 50)
+      ctx.font = '11px sans-serif'
+      ctx.fillStyle = '#6a6a8a'
+      ctx.fillText('SHOT NAME', PAD + SHOT_NUM_W / 2, baseY + 70)
+      ctx.textAlign = 'left'
 
-        ctx.fillStyle = '#0f0f23'
-        ctx.beginPath()
-        ctx.roundRect(x, y, THUMB_W, THUMB_H, 6)
-        ctx.fill()
-        ctx.strokeStyle = '#2a2a4a'
-        ctx.lineWidth = 1
-        ctx.stroke()
+      const imgX = PAD + SHOT_NUM_W
+      const imgY = baseY
 
-        const img = await loadImage(entry.file)
+      ctx.fillStyle = '#0f0f23'
+      ctx.beginPath()
+      ctx.roundRect(imgX, imgY, MAIN_W, MAIN_H, 6)
+      ctx.fill()
+      ctx.strokeStyle = '#2a2a4a'
+      ctx.lineWidth = 1
+      ctx.stroke()
+
+      if (p.imageFile) {
+        const img = await loadImage(p.imageFile)
         if (img) {
-          const scale = Math.min(THUMB_W / img.naturalWidth, THUMB_H / img.naturalHeight)
+          const scale = Math.min(MAIN_W / img.naturalWidth, MAIN_H / img.naturalHeight)
           const drawW = img.naturalWidth * scale
           const drawH = img.naturalHeight * scale
-          ctx.drawImage(img, x + (THUMB_W - drawW) / 2, y + (THUMB_H - drawH) / 2, drawW, drawH)
+          ctx.drawImage(img, imgX + (MAIN_W - drawW) / 2, imgY + (MAIN_H - drawH) / 2, drawW, drawH)
         }
-
-        ctx.fillStyle = '#e0e0e0'
-        ctx.font = 'bold 11px sans-serif'
-        const label = `Shot ${shotNum}: ${entry.label}`
-        ctx.fillText(label, x + 6, y + THUMB_H + 16)
-
-        imgIndex++
+      } else {
+        ctx.fillStyle = '#4a4a6a'
+        ctx.font = '13px sans-serif'
+        ctx.fillText(`Shot ${shotNum} — no image`, imgX + 16, imgY + MAIN_H / 2 + 5)
       }
 
-      if (allImages.length === 0) {
-        const col = imgIndex % COLS
-        const row = Math.floor(imgIndex / COLS)
-        const x = PAD + col * (THUMB_W + PAD)
-        const y = HEADER_H + PAD + row * ROW_H
-
+      const extras = p.extraImages || []
+      const thumbY = imgY + MAIN_H + 8
+      for (let t = 0; t < extras.length; t++) {
+        const tx = imgX + t * (THUMB_SIZE + THUMB_GAP)
         ctx.fillStyle = '#0f0f23'
         ctx.beginPath()
-        ctx.roundRect(x, y, THUMB_W, THUMB_H, 6)
+        ctx.roundRect(tx, thumbY, THUMB_SIZE, THUMB_SIZE, 4)
         ctx.fill()
         ctx.strokeStyle = '#2a2a4a'
         ctx.lineWidth = 1
         ctx.stroke()
 
+        const tImg = await loadImage(extras[t].file)
+        if (tImg) {
+          const tScale = Math.min(THUMB_SIZE / tImg.naturalWidth, THUMB_SIZE / tImg.naturalHeight)
+          const tDrawW = tImg.naturalWidth * tScale
+          const tDrawH = tImg.naturalHeight * tScale
+          ctx.drawImage(tImg, tx + (THUMB_SIZE - tDrawW) / 2, thumbY + (THUMB_SIZE - tDrawH) / 2, tDrawW, tDrawH)
+        }
+      }
+
+      const totalImgs = (p.imageFile ? 1 : 0) + extras.length
+      if (totalImgs > 0) {
         ctx.fillStyle = '#4a4a6a'
-        ctx.font = '13px sans-serif'
-        ctx.fillText(`Shot ${shotNum} — no image`, x + 12, y + THUMB_H / 2 + 5)
-
-        ctx.fillStyle = '#e0e0e0'
-        ctx.font = 'bold 11px sans-serif'
-        ctx.fillText(`Shot ${shotNum}`, x + 6, y + THUMB_H + 16)
-
-        imgIndex++
+        ctx.font = '11px sans-serif'
+        ctx.fillText(`+ ${totalImgs} image${totalImgs > 1 ? 's' : ''}`, imgX, thumbY + THUMB_SIZE + 16)
       }
     }
 
