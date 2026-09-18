@@ -266,14 +266,83 @@ export default function StoryPanel({ panel, onUpdate, panelNumber }) {
         />
       </td>
       <td className="sb-camera">
-        <textarea
-          value={panel.camera || ''}
-          onChange={(e) => handleField('camera', e.target.value)}
-          placeholder="WIDE ESTABLISHING&#10;16:9 - Heroic landscape"
-          className="cell-textarea"
-          rows={3}
-          maxLength={300}
-        />
+        <select className="camera-select" value={panel.cameraHeight || ''} onChange={(e) => handleField('cameraHeight', e.target.value)}>
+          <option value="">— Height —</option>
+          <option value="High angle">High angle</option>
+          <option value="Low angle">Low angle</option>
+          <option value="Eye level">Eye level</option>
+          <option value="Chest level">Chest level</option>
+          <option value="Ground level">Ground level</option>
+          <option value="Ultra low / worm's eye">Ultra low / worm's eye</option>
+          <option value="Overhead / top-down">Overhead / top-down</option>
+        </select>
+        <select className="camera-select" value={panel.cameraFraming || ''} onChange={(e) => handleField('cameraFraming', e.target.value)}>
+          <option value="">— Framing —</option>
+          <option value="Extreme close-up (ECU)">Extreme close-up (ECU)</option>
+          <option value="Close-up (CU)">Close-up (CU)</option>
+          <option value="Medium close-up (MCU)">Medium close-up (MCU)</option>
+          <option value="Medium shot (MS)">Medium shot (MS)</option>
+          <option value="Medium wide shot (MWS)">Medium wide shot (MWS)</option>
+          <option value="Wide shot (WS)">Wide shot (WS)</option>
+          <option value="Long shot">Long shot</option>
+          <option value="Extreme long shot (ELS)">Extreme long shot (ELS)</option>
+          <option value="Establishing shot">Establishing shot</option>
+        </select>
+        <select className="camera-select" value={panel.cameraAngle || ''} onChange={(e) => handleField('cameraAngle', e.target.value)}>
+          <option value="">— Angle —</option>
+          <option value="Straight-on">Straight-on</option>
+          <option value="Three-quarter angle">Three-quarter angle</option>
+          <option value="Profile / side-view">Profile / side-view</option>
+          <option value="Back-view / rear angle">Back-view / rear angle</option>
+          <option value="Dutch angle / tilt">Dutch angle / tilt</option>
+          <option value="Top-lit vertical perspective">Top-lit vertical</option>
+          <option value="Low tilt-up">Low tilt-up</option>
+        </select>
+        <select className="camera-select" value={panel.cameraPosition || ''} onChange={(e) => handleField('cameraPosition', e.target.value)}>
+          <option value="">— Position —</option>
+          <option value="Over-the-shoulder (OTS)">Over-the-shoulder (OTS)</option>
+          <option value="Point-of-view (POV)">Point-of-view (POV)</option>
+          <option value="Reverse angle">Reverse angle</option>
+          <option value="Close-profile">Close-profile</option>
+          <option value="Back-to-camera">Back-to-camera</option>
+          <option value="Frontal symmetrical shot">Frontal symmetrical</option>
+        </select>
+        <select className="camera-select" value={panel.cameraLens || ''} onChange={(e) => handleField('cameraLens', e.target.value)}>
+          <option value="">— Lens —</option>
+          <option value="Wide-angle perspective">Wide-angle</option>
+          <option value="Ultra-wide perspective">Ultra-wide</option>
+          <option value="Normal focal length">Normal focal length</option>
+          <option value="Telephoto compression">Telephoto compression</option>
+          <option value="Macro perspective">Macro</option>
+          <option value="Anamorphic perspective">Anamorphic</option>
+          <option value="Fisheye perspective">Fisheye</option>
+        </select>
+        <select className="camera-select" value={panel.camera3D || ''} onChange={(e) => handleField('camera3D', e.target.value)}>
+          <option value="">— 3D Space —</option>
+          <option value="Front-facing">Front-facing</option>
+          <option value="Off-axis left">Off-axis left</option>
+          <option value="Off-axis right">Off-axis right</option>
+          <option value="High vantage point">High vantage point</option>
+          <option value="Balcony-level viewpoint">Balcony-level</option>
+          <option value="Rooftop vantage">Rooftop vantage</option>
+          <option value="Close foreground placement">Close foreground</option>
+          <option value="Distant observation point">Distant observation</option>
+        </select>
+        <select className="camera-select" value={panel.resolution || ''} onChange={(e) => handleField('resolution', e.target.value)}>
+          <option value="">— Resolution —</option>
+          <option value="720p (1280x720)">720p</option>
+          <option value="1080p (1920x1080)">1080p</option>
+          <option value="1440p (2560x1440)">1440p</option>
+          <option value="4K (3840x2160)">4K</option>
+          <option value="8K (7680x4320)">8K</option>
+          <option value="16:9 landscape">16:9 landscape</option>
+          <option value="9:16 portrait">9:16 portrait</option>
+          <option value="1:1 square">1:1 square</option>
+          <option value="4:3 standard">4:3 standard</option>
+          <option value="2.39:1 cinematic">2.39:1 cinematic</option>
+          <option value="21:9 ultrawide">21:9 ultrawide</option>
+          <option value="4:5 social">4:5 social</option>
+        </select>
       </td>
       <td className="sb-movement">
         <select
