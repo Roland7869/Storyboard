@@ -177,6 +177,30 @@ body {
   color: var(--text, #e0e0e0);
 }
 
+.model-selector-group {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.model-badge {
+  position: absolute;
+  right: -6px;
+  top: -6px;
+  width: 18px;
+  height: 18px;
+  background: #42c96a;
+  color: #000;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  pointer-events: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
 .run-all-btn {
   display: flex;
   align-items: center;

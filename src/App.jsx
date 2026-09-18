@@ -56,19 +56,29 @@ function validateEndpoint(url) {
   }
 }
 
+const STORAGE_KEY = 'storyboard_settings'
+
+function loadSaved() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    return raw ? JSON.parse(raw) : null
+  } catch { return null }
+}
+
 function App() {
-  const [title, setTitle] = useState('My Storyboard')
-  const [chapter, setChapter] = useState('')
+  const saved = loadSaved()
+  const [title, setTitle] = useState(saved?.title || 'My Storyboard')
+  const [chapter, setChapter] = useState(saved?.chapter || '')
   const [activeTab, setActiveTab] = useState('storyboard')
   const [panels, setPanels] = useState(INITIAL_PANELS)
-  const [videoModel, setVideoModel] = useState('Kling')
+  const [videoModel, setVideoModel] = useState(saved?.videoModel || 'Kling')
   const [settings, setSettings] = useState({
-    aiEndpoint: 'http://localhost:11434/api/generate',
-    aiModel: 'llama3',
-    apiKey: '',
-    promptFileName: '',
-    promptContent: '',
-    colorScheme: 'midnight',
+    aiEndpoint: saved?.aiEndpoint || 'http://localhost:11434/api/generate',
+    aiModel: saved?.aiModel || 'llama3',
+    apiKey: saved?.apiKey || '',
+    promptFileName: saved?.promptFileName || '',
+    promptContent: saved?.promptContent || '',
+    colorScheme: saved?.colorScheme || 'midnight',
   })
   const [isRunning, setIsRunning] = useState(false)
   const [runningPanel, setRunningPanel] = useState(null)
@@ -88,6 +98,20 @@ function App() {
     document.body.style.backgroundColor = c.bg
     document.body.style.color = c.text
   }, [settings.colorScheme])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        title, chapter, videoModel,
+        aiEndpoint: settings.aiEndpoint,
+        aiModel: settings.aiModel,
+        apiKey: settings.apiKey,
+        promptFileName: settings.promptFileName,
+        promptContent: settings.promptContent,
+        colorScheme: settings.colorScheme,
+      }))
+    } catch { /* ignore */ }
+  }, [title, chapter, videoModel, settings])
 
   const updatePanel = useCallback((index, updated) => {
     setPanels(prev => prev.map((p, i) => i === index ? { ...updated, id: p.id } : p))
@@ -303,13 +327,16 @@ Video model: ${videoModel}
           </div>
 
           <div className="run-bar">
-            <select
-              className="model-select"
-              value={videoModel}
-              onChange={(e) => setVideoModel(e.target.value)}
-            >
-              {VIDEO_MODELS.map(m => <option key={m} value={m}>{m}</option>)}
-            </select>
+            <div className="model-selector-group">
+              <select
+                className="model-select"
+                value={videoModel}
+                onChange={(e) => setVideoModel(e.target.value)}
+              >
+                {VIDEO_MODELS.map(m => <option key={m} value={m}>{m}</option>)}
+              </select>
+              <span className="model-badge">✓</span>
+            </div>
             <button className="run-all-btn" onClick={runAIOnAllPanels} disabled={isRunning}>
               {isRunning ? (
                 <><span className="spinner" /> Running AI on Shot {runningPanel} of 6...</>
