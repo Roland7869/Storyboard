@@ -219,34 +219,115 @@ Video model: ${videoModel}
       URL.revokeObjectURL(url)
     }
 
-    const convertToPng = (file) => new Promise((resolve) => {
-      if (file.type === 'image/png') { resolve(file); return }
+    const loadImage = (file) => new Promise((resolve) => {
       const img = new Image()
-      img.onload = () => {
-        const canvas = document.createElement('canvas')
-        canvas.width = img.naturalWidth
-        canvas.height = img.naturalHeight
-        const ctx = canvas.getContext('2d')
-        ctx.drawImage(img, 0, 0)
-        canvas.toBlob((blob) => resolve(blob), 'image/png')
-      }
-      img.onerror = () => resolve(file)
+      img.onload = () => resolve(img)
+      img.onerror = () => resolve(null)
       img.src = URL.createObjectURL(file)
     })
 
-    let exportedCount = 0
+    const THUMB_W = 320
+    const THUMB_H = 180
+    const PAD = 24
+    const HEADER_H = 60
+    const ROW_H = THUMB_H + PAD * 2 + 30
+    const COLS = 4
 
+    const totalImages = panels.reduce((sum, p) => {
+      const main = p.imageFile ? 1 : 0
+      return sum + main + (p.extraImages?.length || 0)
+    }, 0)
+
+    const rows = Math.ceil(totalImages / COLS) || 1
+    const canvasW = PAD + COLS * (THUMB_W + PAD)
+    const canvasH = HEADER_H + PAD + rows * ROW_H + PAD
+
+    const canvas = document.createElement('canvas')
+    canvas.width = canvasW
+    canvas.height = canvasH
+    const ctx = canvas.getContext('2d')
+    ctx.fillStyle = '#1a1a2e'
+    ctx.fillRect(0, 0, canvasW, canvasH)
+
+    ctx.fillStyle = '#e0e0e0'
+    ctx.font = 'bold 22px sans-serif'
+    ctx.fillText(title, PAD, 36)
+    if (chapter) {
+      ctx.font = '14px sans-serif'
+      ctx.fillStyle = '#6a6a8a'
+      ctx.fillText(chapter, PAD, 54)
+    }
+    ctx.fillStyle = '#7c83ff'
+    ctx.font = '12px sans-serif'
+    ctx.fillText(`Model: ${videoModel}  |  ${panels.length} shots  |  ${totalImages} images`, canvasW - 400, 36)
+
+    let imgIndex = 0
     for (let i = 0; i < panels.length; i++) {
       const p = panels[i]
       const shotNum = i + 1
+      const allImages = []
+      if (p.imageFile) allImages.push({ file: p.imageFile, label: 'Main' })
+      for (const ex of (p.extraImages || [])) allImages.push({ file: ex.file, label: ex.name })
 
-      if (p.imageFile) {
-        const pngBlob = await convertToPng(p.imageFile)
-        downloadBlob(pngBlob, `${safeName}_Shot${shotNum}.png`)
-        exportedCount++
-        await new Promise(r => setTimeout(r, 200))
+      for (const entry of allImages) {
+        const col = imgIndex % COLS
+        const row = Math.floor(imgIndex / COLS)
+        const x = PAD + col * (THUMB_W + PAD)
+        const y = HEADER_H + PAD + row * ROW_H
+
+        ctx.fillStyle = '#0f0f23'
+        ctx.beginPath()
+        ctx.roundRect(x, y, THUMB_W, THUMB_H, 6)
+        ctx.fill()
+        ctx.strokeStyle = '#2a2a4a'
+        ctx.lineWidth = 1
+        ctx.stroke()
+
+        const img = await loadImage(entry.file)
+        if (img) {
+          const scale = Math.min(THUMB_W / img.naturalWidth, THUMB_H / img.naturalHeight)
+          const drawW = img.naturalWidth * scale
+          const drawH = img.naturalHeight * scale
+          ctx.drawImage(img, x + (THUMB_W - drawW) / 2, y + (THUMB_H - drawH) / 2, drawW, drawH)
+        }
+
+        ctx.fillStyle = '#e0e0e0'
+        ctx.font = 'bold 11px sans-serif'
+        const label = `Shot ${shotNum}: ${entry.label}`
+        ctx.fillText(label, x + 6, y + THUMB_H + 16)
+
+        imgIndex++
+      }
+
+      if (allImages.length === 0) {
+        const col = imgIndex % COLS
+        const row = Math.floor(imgIndex / COLS)
+        const x = PAD + col * (THUMB_W + PAD)
+        const y = HEADER_H + PAD + row * ROW_H
+
+        ctx.fillStyle = '#0f0f23'
+        ctx.beginPath()
+        ctx.roundRect(x, y, THUMB_W, THUMB_H, 6)
+        ctx.fill()
+        ctx.strokeStyle = '#2a2a4a'
+        ctx.lineWidth = 1
+        ctx.stroke()
+
+        ctx.fillStyle = '#4a4a6a'
+        ctx.font = '13px sans-serif'
+        ctx.fillText(`Shot ${shotNum} — no image`, x + 12, y + THUMB_H / 2 + 5)
+
+        ctx.fillStyle = '#e0e0e0'
+        ctx.font = 'bold 11px sans-serif'
+        ctx.fillText(`Shot ${shotNum}`, x + 6, y + THUMB_H + 16)
+
+        imgIndex++
       }
     }
+
+    canvas.toBlob((blob) => {
+      if (blob) downloadBlob(blob, `${safeName}_shots.png`)
+    }, 'image/png')
 
     const lines = []
     lines.push(`Storyboard: ${title}`)
@@ -277,13 +358,8 @@ Video model: ${videoModel}
       lines.push('')
     }
 
-    const txtContent = lines.join('\n')
-    const txtBlob = new Blob([txtContent], { type: 'text/plain' })
+    const txtBlob = new Blob([lines.join('\n')], { type: 'text/plain' })
     downloadBlob(txtBlob, `${safeName}_prompts.txt`)
-
-    if (exportedCount === 0 && panels.every(p => !p.aiResult && !p.action)) {
-      alert('Nothing to export — add images or run AI first')
-    }
   }
 
   return (
