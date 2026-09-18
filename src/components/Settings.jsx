@@ -29,7 +29,7 @@ function saveSettings(settings) {
 
 export default function Settings({ settings, onUpdate }) {
   const saved = loadSettings()
-  const [aiEndpoint, setAiEndpoint] = useState(settings.aiEndpoint || saved?.aiEndpoint || 'http://localhost:11434/api/generate')
+  const [aiEndpoint, setAiEndpoint] = useState(settings.aiEndpoint || saved?.aiEndpoint || 'http://localhost:1234')
   const [aiModel, setAiModel] = useState(settings.aiModel || saved?.aiModel || 'llama3')
   const [apiKey, setApiKey] = useState(settings.apiKey || saved?.apiKey || '')
   const [colorScheme, setColorScheme] = useState(settings.colorScheme || saved?.colorScheme || 'midnight')
@@ -107,8 +107,8 @@ export default function Settings({ settings, onUpdate }) {
 
         <div className="setting-group">
           <label htmlFor="ai-endpoint">API Endpoint</label>
-          <input id="ai-endpoint" type="text" value={aiEndpoint} onChange={handleEndpointChange} placeholder="http://localhost:11434/api/generate" maxLength={500} />
-          <span className="setting-hint">Ollama: http://localhost:11434/api/generate | LM Studio: http://localhost:1234/v1/chat/completions</span>
+          <input id="ai-endpoint" type="text" value={aiEndpoint} onChange={handleEndpointChange} placeholder="http://localhost:1234" maxLength={500} />
+          <span className="setting-hint">LM Studio (default): http://localhost:1234 | Ollama: http://localhost:11434/api/generate</span>
         </div>
 
         <div className="setting-group">
