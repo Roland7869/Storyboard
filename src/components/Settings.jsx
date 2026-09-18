@@ -242,15 +242,15 @@ export default function Settings({ settings, onUpdate }) {
         <h3>Prompt Template Variables</h3>
         <p className="section-desc">Use these variables in your prompt template:</p>
         <div className="variables-list">
-          <code>{'{{panel_number}}'}</code> — The panel number (1-9)
+          <code>{'{{shot_number}}'}</code> — The shot number (1-6)
           <br />
-          <code>{'{{panel_text}}'}</code> — The text content of the panel
+          <code>{'{{shot_data}}'}</code> — Full shot data (camera, movement, lighting, etc.)
           <br />
           <code>{'{{title}}'}</code> — The storyboard title
           <br />
           <code>{'{{chapter}}'}</code> — The chapter name
           <br />
-          <code>{'{{all_panels}}'}</code> — Full storyboard text (all panels)
+          <code>{'{{video_model}}'}</code> — The selected video model (Kling, Veo, etc.)
         </div>
       </div>
     </div>
